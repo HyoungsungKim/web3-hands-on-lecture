@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>MetaMask Connect (ethers v6)</title>
+  <!-- 브라우저 전역 ethers 객체 생성 -->
+  <script src="https://cdn.jsdelivr.net/npm/ethers@6.10.0/dist/ethers.umd.min.js"></script>
+</head>
+<body>
+  <h2>MetaMask 연결 데모</h2>
+  <button id="connectButton">🔗 MetaMask 연결</button>
+  <p id="accountInfo"></p>
+
+  <script>
+    const connectBtn  = document.getElementById('connectButton');
+    const accountInfo = document.getElementById('accountInfo');
+    let provider, signer;
+
+    connectBtn.addEventListener('click', async () => {
+      if (!window.ethereum) {
+        accountInfo.textContent = '⚠️ MetaMask가 설치되어 있지 않습니다.';
+        return;
+      }
+
+      try {
+        provider = new ethers.BrowserProvider(window.ethereum);  // v6
+        await provider.send('eth_requestAccounts', []);
+        signer  = await provider.getSigner();
+        const addr = await signer.getAddress();
+        accountInfo.textContent = `🧾 연결된 계정: ${addr}`;
+      } catch (err) {
+        accountInfo.textContent = '❌ 연결 실패: ' + err.message;
+      }
+    });
+  </script>
+</body>
+</html>

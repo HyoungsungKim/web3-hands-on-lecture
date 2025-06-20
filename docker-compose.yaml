@@ -1,0 +1,34 @@
+version: "3.7"
+
+services:
+  anvil:
+    image: ghcr.io/foundry-rs/foundry
+    command: anvil --host 0.0.0.0 -p 8545 --mnemonic "test test test test test test test test test test test junk"
+    ports:
+      - "8545:8545"
+    stdin_open: true
+    tty: true
+
+  foundry:
+    image: ghcr.io/foundry-rs/foundry
+    volumes:
+      - ./foundry:/app          # 소스 ↔ 컨테이너 매핑
+    working_dir: /app
+    entrypoint: /bin/bash       # “bash 쉘”로 진입
+    tty: true
+    stdin_open: true
+    environment:
+      - ETH_RPC_URL=http://anvil:8545
+    depends_on:
+      - anvil
+
+  frontend:
+    image: node:22
+    ports:
+      - 10010:10010
+    working_dir: /app
+    volumes:
+      - ./frontend:/app/frontend
+    stdin_open: true
+    tty: true
+
