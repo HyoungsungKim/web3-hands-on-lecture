@@ -1,4 +1,4 @@
 ```
-npm install -g http-server
-http-server .
+npm install http-server
+npx http-server .
 ```
