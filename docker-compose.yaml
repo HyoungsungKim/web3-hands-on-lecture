@@ -3,17 +3,21 @@ version: "3.7"
 services:
   anvil:
     image: ghcr.io/foundry-rs/foundry
-    command: anvil --host 0.0.0.0 -p 8545 --mnemonic "test test test test test test test test test test test junk"
-    ports:
-      - "8545:8545"
+    #build: ./anvil/.
+    command: ["anvil","--host","0.0.0.0","--port","8545",
+              "--mnemonic","test test test test test test test test test test test junk"]
+    ports: ["8545:8545"]
     stdin_open: true
     tty: true
+    networks:
+      customnet:
+        ipv4_address: 172.30.1.1
 
   foundry:
     image: ghcr.io/foundry-rs/foundry
     volumes:
-      - ./foundry:/app          # 소스 ↔ 컨테이너 매핑
-    working_dir: /app
+      - ./foundry:/app/foundry          # 소스 ↔ 컨테이너 매핑
+    working_dir: /app/foundry
     entrypoint: /bin/bash       # “bash 쉘”로 진입
     tty: true
     stdin_open: true
@@ -21,14 +25,25 @@ services:
       - ETH_RPC_URL=http://anvil:8545
     depends_on:
       - anvil
+    networks:
+      customnet:
+        ipv4_address: 172.30.1.3
 
   frontend:
     image: node:22
     ports:
       - 10010:10010
-    working_dir: /app
+    working_dir: /app/frontend
     volumes:
       - ./frontend:/app/frontend
     stdin_open: true
     tty: true
+    networks:
+      customnet:
+        ipv4_address: 172.30.1.5
 
+networks:
+  customnet:
+    ipam:
+      config:
+        - subnet: 172.30.0.0/16

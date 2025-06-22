@@ -1,0 +1,1 @@
+docker exec -u root -it web3-hands-on_anvil_1 bash
