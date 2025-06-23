@@ -11,27 +11,101 @@
   <button id="connectButton">🔗 MetaMask 연결</button>
   <p id="accountInfo"></p>
 
-  <script>
-    const connectBtn  = document.getElementById('connectButton');
-    const accountInfo = document.getElementById('accountInfo');
-    let provider, signer;
+  <h2>🏦 SimpleBank 상호작용</h2>
+  <button id="depositButton">💰 입금 (0.01 ETH)</button><br><br>
 
-    connectBtn.addEventListener('click', async () => {
-      if (!window.ethereum) {
-        accountInfo.textContent = '⚠️ MetaMask가 설치되어 있지 않습니다.';
+  <input type="number" id="withdrawAmt" placeholder="출금할 금액 (ETH)">
+  <button id="withdrawButton">🏧 출금</button><br><br>
+
+  <button id="checkBalance">📊 내 잔액 확인</button><br><br>
+
+  <button id="checkEth">💠 지갑 ETH 잔액 확인</button><br><br>
+  <button id="checkMyBalance">🏦 myBalance() 조회</button>
+
+  <p id="balanceInfo"></p>
+  <p id="myBalanceInfo"></p>
+
+<script type="module">
+  const contractAddress = '0x5FbDB2315678afecb367f032d93F642f64180aa3';
+  const res = await fetch('./SimpleBank.json');
+  const json = await res.json();
+  const contractABI = json.abi;
+
+  let provider, signer, contract;
+
+  const connectBtn     = document.getElementById('connectButton');
+  const depositBtn     = document.getElementById('depositButton');
+  const withdrawBtn    = document.getElementById('withdrawButton');
+  const checkBalanceBtn = document.getElementById('checkBalance');
+
+  const accountInfo    = document.getElementById('accountInfo');
+  const balanceInfo    = document.getElementById('balanceInfo');
+
+  connectBtn.onclick = async () => {
+    provider = new ethers.BrowserProvider(window.ethereum);
+    await provider.send('eth_requestAccounts', []);
+    signer = await provider.getSigner();
+    const address = await signer.getAddress();
+    contract = new ethers.Contract(contractAddress, contractABI, signer);
+    accountInfo.textContent = `✅ 연결된 주소: ${address}`;
+  };
+
+  depositBtn.onclick = async () => {
+    try {
+      const tx = await contract.deposit({ value: ethers.parseEther("0.01") });
+      await tx.wait();
+      alert("💰 입금 완료!");
+    } catch (err) {
+      alert("❌ 입금 실패: " + err.message);
+    }
+  };
+
+  withdrawBtn.onclick = async () => {
+    try {
+      const amount = document.getElementById('withdrawAmt').value;
+      if (!amount || isNaN(amount) || Number(amount) <= 0) {
+        alert("출금할 금액을 올바르게 입력해주세요.");
         return;
       }
+      const tx = await contract.withdraw(ethers.parseEther(amount));
+      await tx.wait();
+      alert("🏧 출금 완료!");
+    } catch (err) {
+      alert("❌ 출금 실패: " + err.message);
+    }
+  };
 
-      try {
-        provider = new ethers.BrowserProvider(window.ethereum);  // v6
-        await provider.send('eth_requestAccounts', []);
-        signer  = await provider.getSigner();
-        const addr = await signer.getAddress();
-        accountInfo.textContent = `🧾 연결된 계정: ${addr}`;
-      } catch (err) {
-        accountInfo.textContent = '❌ 연결 실패: ' + err.message;
-      }
-    });
-  </script>
+  checkBalanceBtn.onclick = async () => {
+    try {
+      const addr = await signer.getAddress();
+      const bal = await contract.balanceOf(addr);
+      balanceInfo.textContent = `📊 현재 잔액: ${ethers.formatEther(bal)} ETH`;
+    } catch (err) {
+      alert("잔액 조회 실패: " + err.message);
+    }
+  };
+
+  /* ❶ 지갑 ETH 잔액 확인 */
+document.getElementById('checkEth').onclick = async () => {
+  try {
+    const addr = await signer.getAddress();
+    const ethBal = await provider.getBalance(addr);           // 네이티브 ETH
+    alert(`지갑 주소 내 잔액: ${ethers.formatEther(ethBal)} ETH`);
+  } catch (err) {
+    alert("ETH 잔액 조회 실패: " + err.message);
+  }
+};
+
+/* ❷ myBalance() 호출 */
+document.getElementById('checkMyBalance').onclick = async () => {
+  try {
+    const bal = await contract.myBalance();                   // view 함수
+    document.getElementById('myBalanceInfo').textContent =
+      `🏦 컨트랙트 보관 잔액: ${ethers.formatEther(bal)} ETH`;
+  } catch (err) {
+    alert("myBalance 조회 실패: " + err.message);
+  }
+};
+</script>
 </body>
 </html>
