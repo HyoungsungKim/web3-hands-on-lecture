@@ -6,7 +6,7 @@
   <!-- 브라우저 전역 ethers 객체 생성 -->
   <script src="https://cdn.jsdelivr.net/npm/ethers@6.10.0/dist/ethers.umd.min.js"></script>
 </head>
-<body>
+<body  style="text-align: center;">
   <h2>MetaMask 연결 데모</h2>
   <button id="connectButton">🔗 MetaMask 연결</button>
   <p id="accountInfo"></p>
@@ -24,14 +24,46 @@
 
   <p id="balanceInfo"></p>
   <p id="myBalanceInfo"></p>
+  <hr width = "90%">
+
+  <h2>🪙 SimpleBankV2 (ETH + Token)</h2>
+
+  <!-- ETH 입출금 -->
+  <button id="v2DepositEth">💰 ETH 입금 (0.01)</button><br><br>
+  <input type="number" id="v2WithdrawEthAmt" placeholder="ETH 출금 금액">
+  <button id="v2WithdrawEth">🏧 ETH 출금</button><br><br>
+
+  <!-- ERC-20 입출금 -->
+  <input type="number" id="v2TokenAmt" placeholder="토큰 입금 금액">
+  <button id="v2ApproveToken">✅ 토큰 승인</button>
+  <button id="v2DepositToken">📥 토큰 입금</button><br><br>
+
+  <input type="number" id="v2WithdrawTokenAmt" placeholder="토큰 출금 금액">
+  <button id="v2WithdrawToken">📤 토큰 출금</button><br><br>
+
+  <!-- 잔액 조회 -->
+  <button id="v2CheckEth">💠 ETH 잔액 확인</button>
+  <button id="v2CheckToken">🪙 Token 잔액 확인</button>
+
+  <p id="v2EthInfo"></p>
+  <p id="v2TokenInfo"></p>
 
 <script type="module">
   const contractAddress = '0x5FbDB2315678afecb367f032d93F642f64180aa3';
-  const res = await fetch('./SimpleBank.json');
-  const json = await res.json();
-  const contractABI = json.abi;
+  const res = await fetch('./abi/SimpleBank.json');
+  const contractABI = (await res.json()).abi;
+  
+  const tokenAddress = '0xDc64a140Aa3E981100a9becA4E685f962f0cF6C9';
+  const resToken = await fetch('./abi/MyToken.json');
+  const abiToken = (await resToken.json()).abi;
 
-  let provider, signer, contract;
+  const contractV2Address = '0x5FC8d32690cc91D4c39d9d3abcBD16989F875707';
+  const resV2 = await fetch('./abi/SimpleBankV2.json');
+  const abiV2 = (await resV2.json()).abi;
+
+
+
+  let provider, signer, contract, contractV2, myToken;
 
   const connectBtn     = document.getElementById('connectButton');
   const depositBtn     = document.getElementById('depositButton');
@@ -41,12 +73,16 @@
   const accountInfo    = document.getElementById('accountInfo');
   const balanceInfo    = document.getElementById('balanceInfo');
 
+
   connectBtn.onclick = async () => {
     provider = new ethers.BrowserProvider(window.ethereum);
     await provider.send('eth_requestAccounts', []);
     signer = await provider.getSigner();
     const address = await signer.getAddress();
     contract = new ethers.Contract(contractAddress, contractABI, signer);
+    contractV2 = new ethers.Contract(contractV2Address, abiV2, signer);
+    myToken = new ethers.Contract(tokenAddress, abiToken, signer);
+
     accountInfo.textContent = `✅ 연결된 주소: ${address}`;
   };
 
@@ -96,16 +132,71 @@ document.getElementById('checkEth').onclick = async () => {
   }
 };
 
-/* ❷ myBalance() 호출 */
-document.getElementById('checkMyBalance').onclick = async () => {
-  try {
-    const bal = await contract.myBalance();                   // view 함수
-    document.getElementById('myBalanceInfo').textContent =
-      `🏦 컨트랙트 보관 잔액: ${ethers.formatEther(bal)} ETH`;
-  } catch (err) {
-    alert("myBalance 조회 실패: " + err.message);
-  }
-};
+  /* ❷ myBalance() 호출 */
+  document.getElementById('checkMyBalance').onclick = async () => {
+    try {
+      const bal = await contract.myBalance();                   // view 함수
+      document.getElementById('myBalanceInfo').textContent =
+        `🏦 컨트랙트 보관 잔액: ${ethers.formatEther(bal)} ETH`;
+    } catch (err) {
+      alert("myBalance 조회 실패: " + err.message);
+    }
+  };
+
+  //--------------------------------Contract V2 Interaction--------------------------------
+
+  // V2: ETH 입금
+  document.getElementById('v2DepositEth').onclick = async () => {
+    const tx = await contractV2.deposit({ value: ethers.parseEther("0.01") });
+    await tx.wait();
+    alert("ETH 입금 완료");
+  };
+
+  // V2: ETH 출금
+  document.getElementById('v2WithdrawEth').onclick = async () => {
+    const amt = document.getElementById('v2WithdrawEthAmt').value;
+    const tx = await contractV2.withdraw(ethers.parseEther(amt));
+    await tx.wait();
+    alert("ETH 출금 완료");
+  };
+
+  // V2: 토큰 승인
+  document.getElementById('v2ApproveToken').onclick = async () => {
+    const amt = document.getElementById('v2TokenAmt').value;
+    const tx = await myToken.approve(contractV2Address, ethers.parseEther(amt));
+    await tx.wait();
+    alert("✅ 승인 완료");
+  };
+
+  // V2: 토큰 입금
+  document.getElementById('v2DepositToken').onclick = async () => {
+    const amt = document.getElementById('v2TokenAmt').value;
+    const tx = await contractV2.depositToken(ethers.parseEther(amt));
+    await tx.wait();
+    alert("📥 토큰 입금 완료");
+  };
+
+  // V2: 토큰 출금
+  document.getElementById('v2WithdrawToken').onclick = async () => {
+    const amt = document.getElementById('v2WithdrawTokenAmt').value;
+    const tx = await contractV2.withdrawToken(ethers.parseEther(amt));
+    await tx.wait();
+    alert("📤 토큰 출금 완료");
+  };
+
+  // V2: ETH 잔액 조회
+  document.getElementById('v2CheckEth').onclick = async () => {
+    const addr = await signer.getAddress();
+    const bal = await contractV2.ethBalanceOf(addr);
+    document.getElementById('v2EthInfo').textContent = `💠 컨트랙트 속 ETH: ${ethers.formatEther(bal)} ETH`;
+  };
+
+  // V2: Token 잔액 조회
+  document.getElementById('v2CheckToken').onclick = async () => {
+    const addr = await signer.getAddress();
+    const bal = await contractV2.tokenBalanceOf(addr);
+    document.getElementById('v2TokenInfo').textContent = `🪙 컨트랙트 속 토큰: ${ethers.formatEther(bal)} DTK`;
+  };
 </script>
 </body>
 </html>

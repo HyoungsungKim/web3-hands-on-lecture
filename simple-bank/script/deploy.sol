@@ -14,5 +14,5 @@ contract DeploySimpleBank is Script {
     }
 }
 
-// Build 후 out/src/SimpleBank.sol/SimpleBank.json 파일에 배포된 컨트랙트 주소가 기록됨
+// Build 후 out/SimpleBank.sol/SimpleBank.json 파일에 배포된 컨트랙트 주소가 기록됨
 // deploy 후 생성된 contract 주소 확인 및 복사
