@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 // forge build
-// forge script ./deploy.sol:DeploySimpleBank --rpc-url http://localhost:8545 --broadcast --private-key 0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80
+// forge script ./deploy.sol:DeploySimpleBank --rpc-url http://172.40.0.1:8545 --broadcast --private-key 0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80
 pragma solidity ^0.8.24;
 
 import "forge-std/Script.sol";

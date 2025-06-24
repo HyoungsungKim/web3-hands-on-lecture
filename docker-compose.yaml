@@ -33,8 +33,10 @@ services:
 
   frontend:
     image: node:22
+    entrypoint: ["sh", "-c", "npm install && npx http-server -p 8080 ."]
     ports:
-      - 10010:10010
+      #- 10010:10010
+      - 8080:8080
     working_dir: /app/frontend
     volumes:
       - ./frontend:/app/frontend
