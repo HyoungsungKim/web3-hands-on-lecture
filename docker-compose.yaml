@@ -4,20 +4,22 @@ services:
   anvil:
     image: ghcr.io/foundry-rs/foundry
     #build: ./anvil/.
-   command: anvil --host 0.0.0.0 -p 8545 --mnemonic "test test test test test test test test test test test junk"
+    command: anvil --host 0.0.0.0 -p 8545 --mnemonic "test test test test test test test test test test test junk"
     ports:
-      - "8545:8545"
+      - 8545:8545
+    environment:
+      - ANVIL_IP_ADDR=0.0.0.0
     stdin_open: true
     tty: true
     networks:
       customnet:
-        ipv4_address: 172.30.1.1
+        ipv4_address: 172.40.0.1
 
   foundry:
     image: ghcr.io/foundry-rs/foundry
     volumes:
-      - ./foundry:/app/foundry          # 소스 ↔ 컨테이너 매핑
-    working_dir: /app/foundry
+      - ./simple-bank:/app/simple-bank          # 소스 ↔ 컨테이너 매핑
+    working_dir: /app/simple-bank
     entrypoint: /bin/bash       # “bash 쉘”로 진입
     tty: true
     stdin_open: true
@@ -27,7 +29,7 @@ services:
       - anvil
     networks:
       customnet:
-        ipv4_address: 172.30.1.3
+        ipv4_address: 172.40.0.3
 
   frontend:
     image: node:22
@@ -40,10 +42,11 @@ services:
     tty: true
     networks:
       customnet:
-        ipv4_address: 172.30.1.5
+        ipv4_address: 172.40.0.5
 
 networks:
   customnet:
     ipam:
       config:
-        - subnet: 172.30.0.0/16
+        - gateway: 172.40.1.1
+          subnet: 172.40.0.0/16
