@@ -28,3 +28,32 @@ chainid: 31337
 ```
 forge install OpenZeppelin/openzeppelin-contracts
 ```
+
+4. Explore
+```
+docker run -d --rm \
+  --name otterscan \
+  -p 5100:80 \
+  --env OTTERSCAN_CONFIG='{
+    "erigonURL":  "http://127.0.0.1:8545",
+    "assetsURLPrefix": "http://127.0.0.1:5175",
+
+    "chainInfo": {
+      "chainId": 31337,                
+      "name": "Anvil Local",
+      "nativeCurrency": {
+        "name": "Anvil Ether",
+        "symbol": "aETH",
+        "decimals": 18
+      },
+      "faucets": []
+    },
+
+    "branding": {
+      "siteName": "My Otterscan",
+      "networkTitle": "Dev Network"
+    }
+  }' \
+  otterscan/otterscan:latest
+
+```
